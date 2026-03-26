@@ -686,7 +686,70 @@
 
   <div class="celebrate" id="celebrate"></div>
 
+<div id="kakaoBlock" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+">
+  <div style="
+    background:white;
+    border-radius:20px;
+    padding:24px;
+    max-width:320px;
+    text-align:center;
+    font-family:inherit;
+  ">
+    <div style="font-size:22px; font-weight:900; margin-bottom:12px;">
+      🐶 더 잘 들리게!
+    </div>
+
+    <div style="font-size:16px; margin-bottom:18px; line-height:1.4;">
+      카카오톡에서는 소리가 잘 안 나올 수 있어요 😢<br>
+      👉 Chrome에서 열어 주세요!
+    </div>
+
+    <button id="openBrowserBtn" style="
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:14px;
+      background:#6e93ff;
+      color:white;
+      font-size:16px;
+      font-weight:900;
+    ">
+      Chrome으로 열기
+    </button>
+  </div>
+</div>
+  
   <script>
+
+    function isKakao() {
+  return /KAKAOTALK/i.test(navigator.userAgent);
+}
+
+function showKakaoBlock() {
+  const el = document.getElementById('kakaoBlock');
+  if (el) el.style.display = 'flex';
+}
+
+function openInExternalBrowser() {
+  const url = window.location.href;
+  window.location.href = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+}
+
+// run on load
+if (isKakao()) {
+  showKakaoBlock();
+}
+
+document.getElementById('openBrowserBtn')?.addEventListener('click', openInExternalBrowser);
     const DOLCH = {
       prePrimer: ["a","and","away","big","blue","can","come","down","find","for","funny","go","help","here","I","in","is","it","jump","little","look","make","me","my","not","one","play","red","run","said","see","the","three","to","two","up","we","where","yellow","you"],
       primer: ["all","am","are","at","ate","be","black","brown","but","came","did","do","eat","four","get","good","have","he","into","like","must","new","no","now","on","our","out","please","pretty","ran","ride","saw","say","she","so","soon","that","there","they","this","too","under","want","was","well","went","what","white","who","will","with","yes"],
