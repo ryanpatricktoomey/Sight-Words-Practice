@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>돌치 단어 트레이너</title>
+  <style>
+    :root {
+      --bg1: #fef6ff;
+      --bg2: #eef9ff;
+      --card: rgba(255,255,255,0.95);
+      --text: #26344f;
+      --muted: #71809a;
+      --line: #e2e9f5;
+      --pink: #ff7ab8;
+      --blue: #6e93ff;
+      --mint: #39cdaa;
+      --yellow: #ffcd54;
+      --orange: #ff9d5c;
+      --purple: #a583ff;
+      --danger: #ff7171;
+      --gold: #ffcf4a;
+      --shadow: 0 14px 34px rgba(84, 108, 160, 0.18);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: \"Comic Sans MS\", \"Trebuchet MS\", \"Arial Rounded MT Bold\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #fff4b8 0%, transparent 26%),
+        radial-gradient(circle at top right, #ffd5e8 0%, transparent 24%),
+        radial-gradient(circle at bottom left, #d5fff0 0%, transparent 22%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 14px 18px 28px;
+    }
+
+    .hero, .card {
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border: 2px solid rgba(255,255,255,.75);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 18px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before, .hero::after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      opacity: .22;
+      pointer-events: none;
+    }
+    .hero::before { background: #ffd45f; left: -24px; top: -30px; }
+    .hero::after { background: #9edbff; right: -18px; bottom: -40px; }
+
+    h1 {
+      margin: 6px 0 4px;
+      font-size: clamp(30px, 7vw, 44px);
+      line-height: 1.05;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .emoji-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 27px;
+      margin-bottom: 6px;
+    }
+
+    .card {
+      margin-top: 14px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(88px, 120px));
+      justify-content: center;
+      gap: 10px;
+      margin: 0 auto 12px;
+      max-width: 400px;
+    }
+
+    .stat {
+      background: linear-gradient(180deg, #fff 0%, #f7fbff 100%);
+      border: 2px solid #eef3fb;
+      border-radius: 22px;
+      text-align: center;
+      padding: 10px 6px;
+    }
+    .stat .label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .stat .value {
+      font-size: clamp(18px, 5vw, 28px);
+      font-weight: 900;
+      line-height: 1.05;
+    }
+
+    .progress-wrap { display: none;
+      margin-bottom: 10px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .progress {
+      width: 100%;
+      height: 18px;
+      background: #e8eef8;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff90b4 0%, #86a8ff 40%, #4ed8b8 100%);
+      transition: width .25s ease;
+    }
+
+    .stage-tag {
+      display: inline-flex;
+      margin: 0 auto 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #425daa;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .prompt {
+      text-align: center;
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 900;
+      color: #3b5492;
+      margin: 4px 0 10px;
+      min-height: 38px;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      min-height: 30px;
+      margin-bottom: 10px;
+    }
+
+    .stage-box {
+      min-height: 460px;
+      display: grid;
+      align-items: center;
+    }
+
+    .main-word {
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      border: 3px solid #edf2fb;
+      font-size: clamp(54px, 14vw, 100px);
+      font-weight: 900;
+      text-align: center;
+      padding: 12px;
+      letter-spacing: .02em;
+      position: relative;
+    }
+
+    .mini-instruction {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .choice, .main-btn, .level-btn, .badge-btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 900;
+      box-shadow: 0 6px 16px rgba(103, 124, 171, .12);
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+
+    .choice:active, .main-btn:active, .level-btn:active, .badge-btn:active { transform: scale(.98); }
+
+    .choice {
+      min-height: 100px;
+      border-radius: 26px;
+      font-size: clamp(28px, 7vw, 44px);
+      background: white;
+    }
+    .choice:nth-child(1) { background: #ffe6f0; }
+    .choice:nth-child(2) { background: #e8f1ff; }
+    .choice:nth-child(3) { background: #e5fff3; }
+    .choice:nth-child(4) { background: #fff3d4; }
+    .choice.correct { background: #dffff2 !important; box-shadow: 0 0 0 4px rgba(57,205,170,.22); }
+    .choice.wrong { background: #ffe6e6 !important; box-shadow: 0 0 0 4px rgba(255,113,113,.18); }
+
+    .main-btn {
+      min-height: 70px;
+      border-radius: 24px;
+      font-size: 22px;
+      padding: 14px 18px;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .btn-blue { background: #e7f0ff; }
+    .btn-pink { background: #ffe5f0; }
+    .btn-mint { background: #e1fff6; }
+    .btn-yellow { background: #fff1c7; }
+    .btn-orange { background: #ffe4d0; }
+    .btn-purple { background: #eee6ff; }
+    .btn-gold { background: #fff1ba; }
+
+    .two-btns, .three-btns {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .two-btns { grid-template-columns: repeat(2, 1fr); }
+    .three-btns { grid-template-columns: repeat(3, 1fr); }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+    #screen-play { position: relative; }
+
+    .combo-float {
+      position: absolute;
+      right: 6px;
+      top: 96px;
+      min-width: 74px;
+      min-height: 74px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      border: 3px solid #edf2fb;
+      box-shadow: 0 10px 24px rgba(84, 108, 160, 0.16);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 5;
+      text-align: center;
+      padding: 8px 6px;
+    }
+    .combo-float.show { display: flex; }
+    .combo-emoji {
+      font-size: 30px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .combo-num {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .level-btn {
+      border-radius: 26px;
+      padding: 18px 14px;
+      min-height: 138px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 3px solid #edf2fb;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .level-emoji {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+    .level-title {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .level-sub {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .level-btn.locked {
+      opacity: .6;
+      filter: grayscale(.18);
+    }
+    .lock-mark {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 22px;
+    }
+
+    .celebrate {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 50;
+    }
+
+    .confetti {
+      position: absolute;
+      top: -20px;
+      font-size: 24px;
+      animation: fall 1.4s linear forwards;
+    }
+
+    .popup {
+      position: fixed;
+      left: 50%;
+      top: 22%;
+      transform: translateX(-50%);
+      background: white;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 14px 30px rgba(77, 103, 168, .22);
+      z-index: 60;
+      animation: popup 1s ease forwards;
+    }
+
+    @keyframes popup {
+      0% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(.85); }
+      20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.06); }
+      80% { opacity: 1; transform: translateX(-50%) translateY(-8px) scale(1); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(.96); }
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(420deg); opacity: 0; }
+    }
+
+    .bounce { animation: bounce .35s ease; }
+    .pulse { animation: pulse .45s ease; }
+    .shake { animation: shake .3s ease; }
+
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .done-box {
+      text-align: center;
+      display: grid;
+      gap: 12px;
+    }
+
+    .done-emoji {
+      font-size: 56px;
+    }
+
+    .done-title {
+      font-size: clamp(30px, 8vw, 48px);
+      font-weight: 900;
+    }
+
+    .done-score {
+      font-size: 20px;
+      font-weight: 900;
+      color: #4561aa;
+      line-height: 1.4;
+    }
+    .done-breakdown {
+      text-align: left;
+      background: rgba(255,255,255,0.9);
+      border: 2px solid #e8eef7;
+      border-radius: 20px;
+      padding: 12px 14px;
+      display: grid;
+      gap: 8px;
+      max-width: 360px;
+      margin: 0 auto;
+      box-shadow: 0 8px 18px rgba(84, 108, 160, 0.08);
+    }
+
+    .done-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .done-row span:last-child {
+      color: #4561aa;
+      white-space: nowrap;
+    }
+
+    .done-total {
+      border-top: 2px dashed #d8e1f0;
+      padding-top: 8px;
+      margin-top: 2px;
+      font-size: 18px;
+    }
+
+
+    .tiny-note {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .type-box {
+      display: grid;
+      gap: 12px;
+    }
+
+    .type-input {
+      width: 100%;
+      min-height: 74px;
+      font-size: 34px;
+      text-align: center;
+      border-radius: 24px;
+      border: 3px solid #e8eef7;
+      outline: none;
+      padding: 10px 16px;
+      font-weight: 900;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #5a68a5;
+      min-height: 34px;
+      letter-spacing: .15em;
+    }
+
+    .chunk-badge {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff3d0;
+      color: #8a5b00;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 900;
+      margin: 0 auto 8px;
+    }
+
+    .rank {
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .badge-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+      min-height: 36px;
+    }
+
+    .badge-chip {
+      font-size: 28px;
+      background: #fff;
+      border: 2px solid #edf2fb;
+      border-radius: 18px;
+      padding: 6px 10px;
+      box-shadow: 0 6px 16px rgba(103,124,171,.08);
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .badge-btn {
+      min-height: 88px;
+      border-radius: 24px;
+      font-size: 36px;
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 3px solid #edf2fb;
+    }
+
+    .mascot-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .mascot {
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    .mascot-speech {
+      background: #fff;
+      border: 2px solid #eef3fb;
+      border-radius: 18px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #4f629a;
+    }
+
+    .home-summary {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .summary-card {
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 2px solid #edf2fb;
+      border-radius: 24px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: repeat(3, minmax(88px, 1fr)); max-width: 100%; }
+      #screen-play .combo-float { right: 0; top: 102px; min-width: 68px; min-height: 68px; }
+      .choices, .level-grid, .three-btns, .two-btns, .badge-grid { grid-template-columns: 1fr; }
+      .stage-box { min-height: 400px; }
+      .wrap { width: min(100%, 560px); padding: 14px 16px 22px; }
+      .card { padding: 12px; }
+      .type-input { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="emoji-row">🔤 🎧 💰 ⭐ 🐶</div>
+      <h1>돌치 단어 트레이너</h1>
+      <div class="sub">Be a Sight Word Master!!!</div>
+    </section>
+
+    <section class="card">
+      <div class="topbar">
+        <div class="stat">
+          <div class="label">레벨</div>
+          <div class="value" id="statLevel">1</div>
+        </div>
+        <div class="stat">
+          <div class="label">🪙</div>
+          <div class="value" id="statCoins">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">⭐</div>
+          <div class="value" id="statStars">0</div>
+        </div>
+</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="progressText">레벨 1 준비!</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div id="screen-home" class="screen active">
+        <div class="home-summary">
+          <div class="summary-card">
+            <div class="mascot-wrap">
+              <div class="mascot" id="homeMascot">🐶</div>
+              <div class="mascot-speech" id="homeMascotSpeech">같이 단어 연습하자!</div>
+            </div>
+            <div class="badge-strip" id="badgeStrip"></div>
+          </div>
+        </div>
+        <div class="prompt">어떤 레벨부터 할까요?</div>
+        <div class="status">한 레벨 안에서 3파트로 나누어 단어를 모두 연습해요 🙂</div>
+        <div class="level-grid" id="levelGrid"></div>
+        <div class="tiny-note">매번 단어 순서가 바뀌어서 같은 레벨도 새롭게 연습할 수 있어요.</div>
+      </div>
+
+      <div id="screen-play" class="screen">
+        <div class="combo-float" id="comboFloat">
+          <div class="combo-emoji" id="comboEmoji">✨</div>
+          <div class="combo-num" id="comboNum">0</div>
+        </div>
+        <div class="mascot-wrap">
+          <div class="mascot" id="playMascot">🐶</div>
+          <div class="mascot-speech" id="playMascotSpeech">집중!</div>
+        </div>
+        <div style="text-align:center;"><div class="stage-tag" id="stageTag">1단계</div></div>
+        <div style="text-align:center;"><div class="chunk-badge" id="chunkBadge">파트 1</div></div>
+        <div class="prompt" id="promptBox">준비!</div>
+        <div class="status" id="statusBox">시작해 볼까요?</div>
+        <div class="stage-box" id="stageBox"></div>
+      </div>
+
+      <div id="screen-finish" class="screen">
+        <div class="done-box" id="finishMain">
+          <div class="done-emoji" id="doneEmoji">🏆</div>
+          <div class="done-title" id="doneTitle">레벨 완료!</div>
+          <div class="rank" id="doneRank">🥇</div>
+          <div class="done-score" id="doneScore">점수 100%</div>
+          <div class="done-breakdown" id="doneBreakdown"></div>
+          <div class="two-btns">
+            <button class="main-btn btn-mint" id="retryBtn">🔁 한 번 더 도전!</button>
+            <button class="main-btn btn-blue" id="nextLevelBtn">➡️ 다음 레벨</button>
+          </div>
+          <button class="main-btn btn-pink" id="homeBtn">🏠 레벨 고르기</button>
+        </div>
+
+        <div class="done-box" id="badgeSelectBox" style="display:none;">
+          <div class="done-emoji">🎁</div>
+          <div class="done-title">배지를 골라요!</div>
+          <div class="done-score">하나를 고르면 내 배지에 저장돼요.</div>
+          <div class="badge-grid" id="badgeChoices"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="celebrate" id="celebrate"></div>
+
+  <script>
+    const DOLCH = {
+      prePrimer: ["a","and","away","big","blue","can","come","down","find","for","funny","go","help","here","I","in","is","it","jump","little","look","make","me","my","not","one","play","red","run","said","see","the","three","to","two","up","we","where","yellow","you"],
+      primer: ["all","am","are","at","ate","be","black","brown","but","came","did","do","eat","four","get","good","have","he","into","like","must","new","no","now","on","our","out","please","pretty","ran","ride","saw","say","she","so","soon","that","there","they","this","too","under","want","was","well","went","what","white","who","will","with","yes"],
+      grade1: ["after","again","an","any","as","ask","by","could","every","fly","from","give","giving","had","has","her","him","his","how","just","know","let","live","may","of","old","once","open","over","put","round","some","stop","take","thank","them","then","think","walk","were","when"],
+      grade2: ["always","around","because","been","before","best","both","buy","call","cold","does","don't","fast","first","five","found","gave","goes","green","its","made","many","off","or","pull","read","right","sing","sit","sleep","tell","their","these","those","upon","us","use","very","wash","which","why","wish","work","would","write","your"],
+      grade3: ["about","better","bring","carry","clean","cut","done","draw","drink","eight","fall","far","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","own","pick","seven","shall","show","six","small","start","ten","today","together","try","warm"],
+      nouns: ["apple","baby","back","ball","bear","bed","bell","bird","birthday","boat","box","boy","bread","brother","cake","car","cat","chair","chicken","children","Christmas","coat","corn","cow","day","dog","doll","door","duck","egg","eye","farm","farmer","father","feet","fire","fish","floor","flower","game","garden","girl","good-bye","grass","ground","hand","head","hill","home","horse","house","kitty","leg","letter","man","men","milk","money","morning","mother","name","nest","night","paper","party","picture","pig","rabbit","rain","ring","robin","Santa Claus","school","seed","sheep","shoe","sister","snow","song","squirrel","stick","street","sun","table","thing","time","top","toy","tree","watch","water","way","wind","window","wood"]
+    };
+
+    const LEVEL_COUNT = 16;
+    const LEVEL_EMOJIS = ['🐣','🌱','🐥','🌈','🚗','🚀','🦄','🐬','🦖','🏆','🎯','👑','🐯','🐼','🐙','🌟'];
+    const ALL_WORDS = [
+      ...DOLCH.prePrimer,
+      ...DOLCH.primer,
+      ...DOLCH.grade1,
+      ...DOLCH.grade2,
+      ...DOLCH.grade3,
+      ...DOLCH.nouns
+    ];
+
+    function buildLevels(words, count) {
+      const baseSize = Math.floor(words.length / count);
+      const extra = words.length % count;
+      let index = 0;
+
+      return Array.from({ length: count }, (_, i) => {
+        const size = baseSize + (i < extra ? 1 : 0);
+        const chunk = words.slice(index, index + size);
+        index += size;
+
+        return {
+          id: i + 1,
+          title: `레벨 ${i + 1}`,
+          emoji: LEVEL_EMOJIS[i] || '⭐',
+          words: chunk
+        };
+      });
+    }
+
+    const LEVELS = buildLevels(ALL_WORDS, LEVEL_COUNT);
+
+    const BADGE_POOL = ['🐶','🐱','🐰','🦊','🐼','🦄','🚀','🍕','⭐','🌈','⚽','🎮','🍎','🍩','🎈','🧁','🐯','🐻','🐸','🦖','💎','🛸','🍀','👑'];
+
+    const state = {
+      currentLevel: 1,
+      unlocked: 1,
+      coins: 0,
+      stars: 0,
+      levelsDone: 0,
+      combo: 0,
+      bestCombo: 0,
+      runBestCombo: 0,
+      levelData: {},
+      badges: [],
+      words: [],
+      stepIndex: 0,
+      steps: [],
+      score: 0,
+      attempts: 0,
+      currentWord: '',
+      chunk: 1,
+      typingTries: 0,
+      chunkPerfect: true,
+      levelPerfect: true,
+      startTime: 0,
+      endTime: 0,
+      pendingReward: null
+    };
+
+    const els = {
+      home: document.getElementById('screen-home'),
+      play: document.getElementById('screen-play'),
+      finish: document.getElementById('screen-finish'),
+      levelGrid: document.getElementById('levelGrid'),
+      stageTag: document.getElementById('stageTag'),
+      chunkBadge: document.getElementById('chunkBadge'),
+      promptBox: document.getElementById('promptBox'),
+      statusBox: document.getElementById('statusBox'),
+      stageBox: document.getElementById('stageBox'),
+      statLevel: document.getElementById('statLevel'),
+      statCoins: document.getElementById('statCoins'),
+      statStars: document.getElementById('statStars'),
+      progressText: document.getElementById('progressText'),
+      progressPercent: document.getElementById('progressPercent'),
+      progressBar: document.getElementById('progressBar'),
+      doneEmoji: document.getElementById('doneEmoji'),
+      doneTitle: document.getElementById('doneTitle'),
+      doneRank: document.getElementById('doneRank'),
+      doneScore: document.getElementById('doneScore'),
+      retryBtn: document.getElementById('retryBtn'),
+      nextLevelBtn: document.getElementById('nextLevelBtn'),
+      homeBtn: document.getElementById('homeBtn'),
+      celebrate: document.getElementById('celebrate'),
+      homeMascot: document.getElementById('homeMascot'),
+      homeMascotSpeech: document.getElementById('homeMascotSpeech'),
+      playMascot: document.getElementById('playMascot'),
+      playMascotSpeech: document.getElementById('playMascotSpeech'),
+      badgeStrip: document.getElementById('badgeStrip'),
+      finishMain: document.getElementById('finishMain'),
+      badgeSelectBox: document.getElementById('badgeSelectBox'),
+      badgeChoices: document.getElementById('badgeChoices')
+    };
+
+    function saveProgress() {
+      localStorage.setItem('dolch_trainer_progress_v4', JSON.stringify({
+        unlocked: state.unlocked,
+        coins: state.coins,
+        stars: state.stars,
+        levelsDone: state.levelsDone,
+        levelData: state.levelData,
+        bestCombo: state.bestCombo || 0,
+        badges: state.badges || []
+      }));
+    }
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem('dolch_trainer_progress_v4') || localStorage.getItem('dolch_trainer_progress_v3');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        state.unlocked = Math.min(data.unlocked || 1, LEVELS.length);
+        state.coins = data.coins || 0;
+        state.stars = data.stars || 0;
+        state.levelsDone = data.levelsDone || 0;
+        state.levelData = data.levelData || {};
+        state.bestCombo = data.bestCombo || 0;
+        state.badges = data.badges || [];
+      } catch (e) {}
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function splitIntoThree(words) {
+      const shuffled = shuffle(words);
+      const size1 = Math.ceil(shuffled.length / 3);
+      const size2 = Math.ceil((shuffled.length - size1) / 2);
+      return [
+        shuffled.slice(0, size1),
+        shuffled.slice(size1, size1 + size2),
+        shuffled.slice(size1 + size2)
+      ].filter(group => group.length);
+    }
+
+    function showScreen(name) {
+      els.home.classList.remove('active');
+      els.play.classList.remove('active');
+      els.finish.classList.remove('active');
+      els[name].classList.add('active');
+
+      const progress = document.querySelector('.progress-wrap');
+      if (progress) {
+        progress.style.display = (name === 'play') ? 'block' : 'none';
+      }
+    }
+
+    function speak(text) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US';
+      u.rate = 0.85;
+      u.pitch = 1.05;
+      u.volume = 1;
+      speechSynthesis.speak(u);
+    }
+
+    function speakWordList(words) {
+      speechSynthesis.cancel();
+      words.forEach((word, idx) => {
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US';
+        u.rate = 0.82;
+        u.pitch = 1.02;
+        u.volume = 1;
+        if ('speak' in speechSynthesis) {
+          setTimeout(() => speechSynthesis.speak(u), idx * 1050);
+        }
+      });
+    }
+
+    function previewWordList(words, onDone) {
+      state.previewing = true;
+      let index = 0;
+      const box = els.stageBox.querySelector('#partPreviewBox');
+      const title = els.stageBox.querySelector('#partPreviewTitle');
+      const btnWrap = els.stageBox.querySelector('#partPreviewBtns');
+      if (!box || !title || !btnWrap) return;
+
+      speechSynthesis.cancel();
+      btnWrap.innerHTML = '';
+      title.textContent = '단어를 보고 들어 보세요!';
+
+      const runNext = () => {
+        if (index >= words.length) {
+          state.previewing = false;
+          title.textContent = '준비됐나요?';
+          btnWrap.innerHTML = `
+            <button class="main-btn btn-blue" id="partReplayBtn">🔊 단어 다시 듣기</button>
+            <button class="main-btn btn-mint" id="partGoBtn">✅ 가자!</button>
+          `;
+          document.getElementById('partReplayBtn').onclick = () => previewWordList(words, onDone);
+          document.getElementById('partGoBtn').onclick = () => {
+            speechSynthesis.cancel();
+            state.previewing = false;
+            setTimeout(() => onDone(), 50);
+          };
+          return;
+        }
+
+        const word = words[index];
+        box.innerHTML = `<div class="main-word bounce">${word}</div>`;
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US';
+        u.rate = 0.82;
+        u.pitch = 1.02;
+        u.volume = 1;
+        u.onend = () => {
+          setTimeout(() => {
+            index += 1;
+            runNext();
+          }, 250);
+        };
+        speechSynthesis.speak(u);
+      };
+
+      runNext();
+    }
+
+    function playTone(type = 'good') {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const notes = type === 'good' ? [523.25, 659.25, 783.99] : [220, 196];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type === 'good' ? 'triangle' : 'sawtooth';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + i * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.16);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + i * 0.08 + 0.18);
+      });
+      setTimeout(() => ctx.close(), 700);
+    }
+
+    function playUnlockTone() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      [392, 523.25, 659.25, 783.99].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.11, now + i * 0.06 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.18);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.06);
+        osc.stop(now + i * 0.06 + 0.2);
+      });
+      setTimeout(() => ctx.close(), 900);
+    }
+
+    function confettiBurst(emojis = ['🎉','⭐','✨','💖','🌟','🎈']) {
+      for (let i = 0; i < 18; i++) {
+        const span = document.createElement('div');
+        span.className = 'confetti';
+        span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDelay = (Math.random() * 0.25) + 's';
+        span.style.fontSize = (20 + Math.random() * 18) + 'px';
+        els.celebrate.appendChild(span);
+        setTimeout(() => span.remove(), 1600);
+      }
+    }
+
+    function popup(text) {
+      const el = document.createElement('div');
+      el.className = 'popup';
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+
+    function mascotMood(type) {
+      if (type === 'good') {
+        els.playMascot.textContent = '🐶';
+        els.playMascotSpeech.textContent = '좋았어!';
+        els.playMascot.classList.remove('shake');
+        els.playMascot.classList.add('pulse');
+        setTimeout(() => els.playMascot.classList.remove('pulse'), 450);
+      } else if (type === 'oops') {
+        els.playMascot.textContent = '🐶';
+        els.playMascotSpeech.textContent = '다시 해보자!';
+        els.playMascot.classList.remove('pulse');
+        els.playMascot.classList.add('shake');
+        setTimeout(() => els.playMascot.classList.remove('shake'), 300);
+      } else {
+        els.playMascot.textContent = '🐶';
+        els.playMascotSpeech.textContent = '집중!';
+      }
+    }
+
+    function homeMascotSay(text) {
+      els.homeMascot.textContent = '🐶';
+      els.homeMascotSpeech.textContent = text;
+    }
+
+    function updateTopbar() {
+      els.statLevel.textContent = state.currentLevel;
+      els.statCoins.textContent = state.coins;
+      els.statStars.textContent = state.stars;
+    }
+
+    function comboTierEmoji(combo) {
+      if (combo >= 18) return '🤯';
+      if (combo >= 15) return '🚀';
+      if (combo >= 12) return '⚡';
+      if (combo >= 9) return '🔥';
+      if (combo >= 6) return '💥';
+      if (combo >= 3) return '✨';
+      return '🌟';
+    }
+
+    function updateComboFloat() {
+      const badge = document.getElementById('comboFloat');
+      const emoji = document.getElementById('comboEmoji');
+      const num = document.getElementById('comboNum');
+      if (!badge || !emoji || !num) return;
+      if (state.combo > 0) {
+        badge.classList.add('show');
+        emoji.textContent = comboTierEmoji(state.combo);
+        num.textContent = state.combo;
+      } else {
+        badge.classList.remove('show');
+        emoji.textContent = '🌟';
+        num.textContent = '0';
+      }
+    }
+
+    function comboVisual() {
+      return comboTierEmoji(state.combo) + state.combo;
+    }
+
+    function updateProgress() {
+      const total = state.steps.length || 1;
+      const pct = Math.round((state.stepIndex / total) * 100);
+      els.progressBar.style.width = pct + '%';
+      els.progressPercent.textContent = pct + '%';
+      els.progressText.textContent = `레벨 ${state.currentLevel} 진행 중`;
+    }
+
+    function updateBadgeStrip() {
+      els.badgeStrip.innerHTML = '';
+      const shown = state.badges;
+      if (!shown.length) {
+        const empty = document.createElement('div');
+        empty.className = 'tiny-note';
+        empty.textContent = '배지를 모아 보세요!';
+        els.badgeStrip.appendChild(empty);
+        return;
+      }
+      shown.forEach(b => {
+        const chip = document.createElement('div');
+        chip.className = 'badge-chip';
+        chip.textContent = b;
+        els.badgeStrip.appendChild(chip);
+      });
+    }
+
+    function renderLevels() {
+      els.levelGrid.innerHTML = '';
+      LEVELS.forEach(level => {
+        const done = !!state.levelData[level.id]?.done;
+        const locked = level.id > state.unlocked;
+        const btn = document.createElement('button');
+        btn.className = 'level-btn' + (locked ? ' locked' : '');
+        const rank = state.levelData[level.id]?.rank || '';
+        btn.innerHTML = `
+          <div class="lock-mark">${locked ? '🔒' : done ? '🔓' : ''}</div>
+          <div class="level-emoji">${done ? (rank || '✅') : level.emoji}</div>
+          <div class="level-title">${level.title}</div>
+          <div class="level-sub">${level.words.length}개 단어</div>
+        `;
+        btn.disabled = locked;
+        btn.onclick = () => !locked && startLevel(level.id);
+        els.levelGrid.appendChild(btn);
+      });
+    }
+
+    function setStage(tag, prompt, status) {
+      els.stageTag.textContent = tag;
+      els.promptBox.textContent = prompt;
+      els.statusBox.textContent = status;
+    }
+
+    function buildLevelSteps(words) {
+      const chunks = splitIntoThree(words);
+      const steps = [];
+      chunks.forEach((chunk, idx) => {
+        const part = idx + 1;
+        steps.push({ type: 'partIntro', part, words: chunk });
+        chunk.forEach(word => steps.push({ type: 'flashAuto', part, word }));
+        shuffle(chunk).forEach(word => steps.push({ type: 'hearPick', part, word }));
+        shuffle(chunk).forEach(word => steps.push({ type: 'spellTest', part, word }));
+        steps.push({ type: 'partFinish', part, words: chunk });
+      });
+      return steps;
+    }
+
+    function startLevel(levelId) {
+      const level = LEVELS.find(l => l.id === levelId);
+      state.currentLevel = levelId;
+      state.words = [...level.words];
+      state.steps = buildLevelSteps(state.words);
+      state.stepIndex = 0;
+      state.score = 0;
+      state.attempts = 0;
+      state.combo = 0;
+      state.runBestCombo = 0;
+      state.chunk = 1;
+      state.typingTries = 0;
+      state.chunkPerfect = true;
+      state.levelPerfect = true;
+      state.startTime = Date.now();
+      state.endTime = 0;
+      state.pendingReward = null;
+      mascotMood('neutral');
+      updateTopbar();
+      updateComboFloat();
+      updateProgress();
+      showScreen('play');
+      renderStep();
+    }
+
+    function renderStep() {
+      if (state.stepIndex >= state.steps.length) {
+        finishLevel();
+        return;
+      }
+      updateProgress();
+      updateComboFloat();
+      els.stageBox.innerHTML = '';
+      const step = state.steps[state.stepIndex];
+      state.chunk = step.part || state.chunk;
+      els.chunkBadge.textContent = `파트 ${state.chunk}`;
+      if (step.type === 'partIntro') renderPartIntro(step.part, step.words);
+      if (step.type === 'flashAuto') renderFlashAuto(step.word);
+      if (step.type === 'hearPick') renderHearPick(step.word);
+      if (step.type === 'spellTest') renderSpellTest(step.word);
+      if (step.type === 'partFinish') renderPartFinish(step.part);
+    }
+
+    function nextStep(delay = 0) {
+      setTimeout(() => {
+        state.stepIndex += 1;
+        renderStep();
+      }, delay);
+    }
+
+    function choicePool(answer) {
+      const others = shuffle(state.words.filter(w => w !== answer)).slice(0, 3);
+      return shuffle([answer, ...others]);
+    }
+
+    function addWrongWordAgain(word, part) {
+      const insertAt = Math.min(state.stepIndex + 3, state.steps.length);
+      state.steps.splice(insertAt, 0, { type: 'hearPick', part, word });
+      state.steps.splice(insertAt + 1, 0, { type: 'spellTest', part, word });
+    }
+
+    function markCorrect(points = 1) {
+      state.score += points;
+      state.attempts += 1;
+      state.combo += 1;
+      state.runBestCombo = Math.max(state.runBestCombo, state.combo);
+      state.bestCombo = Math.max(state.bestCombo, state.combo);
+      updateTopbar();
+      updateComboFloat();
+      playTone('good');
+      mascotMood('good');
+      if (state.combo > 0 && state.combo % 3 === 0) popup(`${comboTierEmoji(state.combo)} ${state.combo}콤보!`);
+    }
+
+    function markWrong() {
+      state.attempts += 1;
+      state.combo = 0;
+      state.chunkPerfect = false;
+      state.levelPerfect = false;
+      updateTopbar();
+      updateComboFloat();
+      playTone('bad');
+      mascotMood('oops');
+    }
+
+    function renderPartIntro(part, words) {
+      state.chunkPerfect = true;
+      state.currentChunkWords = [...words];
+      setStage(`📚 파트 ${part}`, `파트 ${part} 시작!`, `${words.length}개 단어를 먼저 카드로 익혀요.`);
+      const box = document.createElement('div');
+      box.innerHTML = `
+        <div class="mini-instruction" id="partPreviewTitle">시작을 누르면 단어를 보고 들을 수 있어요.</div>
+        <div id="partPreviewBox">
+          <div class="main-word bounce">준비!</div>
+        </div>
+        <div class="two-btns" id="partPreviewBtns">
+          <button class="main-btn btn-mint" id="partStartBtn">▶️ 시작!</button>
+        </div>
+      `;
+      els.stageBox.appendChild(box);
+
+      document.getElementById('partStartBtn').onclick = () => {
+        speechSynthesis.cancel();
+        previewWordList(words, () => nextStep(100));
+      };
+    }
+
+    function renderFlashAuto(word) {
+      state.currentWord = word;
+      setStage('🃏 카드 보기', '보고 듣고 따라 읽어요!', '잠깐 보고 따라 읽으면 자동으로 넘어가요.');
+      const box = document.createElement('div');
+      box.innerHTML = `
+        <div class="main-word bounce" id="flashWord">${word}</div>
+        <div class="mini-instruction">단어를 크게 따라 읽어 보세요!</div>
+        <div class="two-btns">
+          <button class="main-btn btn-blue" id="flashRepeat">🔊 이 단어 다시 듣기</button>
+          <button class="main-btn btn-yellow" id="flashNext">⏭️ 바로 다음</button>
+        </div>
+      `;
+      els.stageBox.appendChild(box);
+      mascotMood('neutral');
+      setTimeout(() => speak(word), 250);
+      const timer = setTimeout(() => nextStep(), 2000);
+      document.getElementById('flashRepeat').onclick = () => speak(word);
+      document.getElementById('flashNext').onclick = () => {
+        clearTimeout(timer);
+        nextStep();
+      };
+    }
+
+    function renderHearPick(word) {
+      state.currentWord = word;
+      setStage('👂 듣고 고르기', '들은 단어를 눌러요!', '잘 듣고 맞는 단어를 골라 보세요.');
+      const wrap = document.createElement('div');
+      wrap.className = 'choices';
+      choicePool(word).forEach(w => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = w;
+        btn.onclick = () => checkHearChoice(btn, w, word);
+        wrap.appendChild(btn);
+      });
+      els.stageBox.appendChild(wrap);
+      const replay = document.createElement('button');
+      replay.className = 'main-btn btn-blue';
+      replay.style.marginTop = '10px';
+      replay.textContent = '🔊 다시 듣기';
+      replay.onclick = () => speak(word);
+      els.stageBox.appendChild(replay);
+      mascotMood('neutral');
+      setTimeout(() => speak(word), 250);
+    }
+
+    function checkHearChoice(button, picked, answer) {
+      const buttons = [...document.querySelectorAll('.choice')];
+      buttons.forEach(b => b.disabled = true);
+      if (picked === answer) {
+        button.classList.add('correct');
+        els.statusBox.textContent = '정답! 잘했어요! 🎉';
+        markCorrect(1);
+        confettiBurst(['⭐','✨','🎉']);
+      } else {
+        button.classList.add('wrong');
+        const right = buttons.find(b => b.textContent === answer);
+        if (right) right.classList.add('correct');
+        els.statusBox.textContent = '괜찮아요! 이 단어는 뒤에서 다시 나와요 🙂';
+        markWrong();
+        addWrongWordAgain(answer, state.chunk);
+        setTimeout(() => speak(answer), 300);
+      }
+      nextStep(1050);
+    }
+
+    function makeHint(word) {
+      const clean = word.toLowerCase();
+      if (clean.length <= 2) return clean[0] + ' _';
+      const chars = clean.split('');
+      return chars.map((ch, idx) => {
+        if (ch === ' ') return ' ';
+        if (idx === 0 || idx === chars.length - 1) return ch;
+        return '_';
+      }).join(' ');
+    }
+
+    function renderSpellTest(word) {
+      state.currentWord = word;
+      state.typingTries = 0;
+      setStage('⌨️ 받아쓰기', '듣고 단어를 써 보세요!', '틀리면 힌트가 나와요.');
+      const box = document.createElement('div');
+      box.className = 'type-box';
+      box.innerHTML = `
+        <div class="main-word bounce">?</div>
+        <div class="hint" id="hintBox"></div>
+        <input class="type-input" id="typeInput" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <div class="two-btns">
+          <button class="main-btn btn-blue" id="typeReplay">🔊 다시 듣기</button>
+          <button class="main-btn btn-mint" id="typeCheck">✅ 확인</button>
+        </div>
+      `;
+      els.stageBox.appendChild(box);
+      const input = document.getElementById('typeInput');
+      const hintBox = document.getElementById('hintBox');
+      mascotMood('neutral');
+      setTimeout(() => {
+        speak(word);
+        input.focus();
+      }, 250);
+
+      function submitTyping() {
+        const typed = input.value.trim().toLowerCase();
+        const answer = word.toLowerCase();
+        if (!typed) {
+          els.statusBox.textContent = '먼저 단어를 써 보세요!';
+          input.focus();
+          return;
+        }
+        if (typed === answer) {
+          els.statusBox.textContent = '맞았어요! 정말 잘했어요! 🌟';
+          markCorrect(2);
+          confettiBurst(['⭐','💖','✨']);
+          input.disabled = true;
+          nextStep(850);
+        } else {
+          state.typingTries += 1;
+          if (state.typingTries === 1) {
+            els.statusBox.textContent = '조금 아쉬워요! 힌트를 보고 다시 써 보세요.';
+            hintBox.textContent = makeHint(word);
+            markWrong();
+            input.value = '';
+            input.focus();
+            addWrongWordAgain(word, state.chunk);
+            setTimeout(() => speak(word), 250);
+          } else {
+            els.statusBox.textContent = `정답은 ${word} ! 다시 들어 보고 넘어가요.`;
+            hintBox.textContent = word;
+            input.disabled = true;
+            addWrongWordAgain(word, state.chunk);
+            setTimeout(() => speak(word), 250);
+            nextStep(1200);
+          }
+        }
+      }
+
+      document.getElementById('typeReplay').onclick = () => speak(word);
+      document.getElementById('typeCheck').onclick = submitTyping;
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitTyping();
+      });
+    }
+
+    function renderPartFinish(part) {
+      const perfect = state.chunkPerfect;
+      setStage(`🎉 파트 ${part} 완료`, perfect ? `파트 ${part} PERFECT!` : `파트 ${part} 끝!`, perfect ? '완벽해요! 보너스도 있어요!' : '잘했어요! 잠깐 축하하고 다음으로 가요.');
+      const box = document.createElement('div');
+      box.innerHTML = `
+        <div class="main-word bounce" style="font-size:clamp(34px,9vw,60px);">${perfect ? 'PERFECT! 🎉' : `파트 ${part} 완료! 🎉`}</div>
+        <div class="mini-instruction">${perfect ? '완벽 보너스 별 1개!' : '곧 다음 파트가 시작돼요.'}</div>
+        <button class="main-btn btn-mint" id="partContinue" style="margin-top:12px;">➡️ 계속</button>
+      `;
+      els.stageBox.appendChild(box);
+      confettiBurst(perfect ? ['🏆','⭐','✨','🎉'] : ['🎉','⭐','✨']);
+      playTone('good');
+      if (perfect) {
+        state.stars += 1;
+        popup('PERFECT 보너스 ⭐');
+      }
+      updateTopbar();
+      document.getElementById('partContinue').onclick = () => nextStep(100);
+    }
+
+    function getRank(percent) {
+      if (percent >= 95) return '🥇';
+      if (percent >= 85) return '🥈';
+      return '🥉';
+    }
+
+    function getSpeedBadge(seconds) {
+      if (seconds <= 120) return '⚡ 빠름';
+      if (seconds <= 220) return '🙂 안정적';
+      return '🐢 천천히';
+    }
+
+    function calculateCoinBreakdown(percent, combo, perfectLevel, firstClear) {
+      const breakdown = [];
+
+      breakdown.push({ label: '기본 완료 보상', coins: 4, icon: '🪙' });
+
+      let accuracyCoins = 0;
+      if (percent >= 98) accuracyCoins = 8;
+      else if (percent >= 95) accuracyCoins = 6;
+      else if (percent >= 90) accuracyCoins = 4;
+      else if (percent >= 80) accuracyCoins = 2;
+      if (accuracyCoins > 0) {
+        breakdown.push({ label: `정확도 보너스 (${percent}%)`, coins: accuracyCoins, icon: '🎯' });
+      }
+
+      let comboCoins = 0;
+      if (combo >= 15) comboCoins = 6;
+      else if (combo >= 12) comboCoins = 5;
+      else if (combo >= 9) comboCoins = 4;
+      else if (combo >= 6) comboCoins = 3;
+      else if (combo >= 3) comboCoins = 2;
+      if (comboCoins > 0) {
+        breakdown.push({ label: `콤보 보너스 (최고 ${combo})`, coins: comboCoins, icon: comboTierEmoji(combo) });
+      }
+
+      if (perfectLevel) {
+        breakdown.push({ label: '퍼펙트 레벨 보너스', coins: 5, icon: '🌟' });
+      }
+
+      if (firstClear) {
+        breakdown.push({ label: '첫 클리어 보너스', coins: 3, icon: '🎁' });
+      }
+
+      const total = breakdown.reduce((sum, item) => sum + item.coins, 0);
+      return { total, breakdown };
+    }
+
+    function finishLevel() {
+      state.endTime = Date.now();
+      const seconds = Math.max(1, Math.round((state.endTime - state.startTime) / 1000));
+      const percent = state.attempts ? Math.round((state.score / (state.attempts * 2)) * 100) : 100;
+      const rank = getRank(percent);
+      const starsEarned = rank === '🥇' ? 3 : rank === '🥈' ? 2 : 1;
+      const speedBadge = getSpeedBadge(seconds);
+      const firstClear = !state.levelData[state.currentLevel]?.done;
+      const coinResult = calculateCoinBreakdown(percent, state.runBestCombo, state.levelPerfect, firstClear);
+      const coinsEarned = coinResult.total;
+      const unlockedBefore = state.unlocked;
+
+      if (firstClear) {
+        state.stars += starsEarned;
+        state.levelsDone += 1;
+      }
+      state.coins += coinsEarned;
+
+      state.levelData[state.currentLevel] = {
+        done: true,
+        percent: Math.max(percent, state.levelData[state.currentLevel]?.percent || 0),
+        stars: Math.max(state.levelData[state.currentLevel]?.stars || 0, starsEarned),
+        rank: rank
+      };
+      if (state.currentLevel === state.unlocked && state.unlocked < LEVELS.length) state.unlocked += 1;
+      saveProgress();
+      updateTopbar();
+      renderLevels();
+      updateBadgeStrip();
+
+      els.doneEmoji.textContent = rank === '🥇' ? '🏆' : rank === '🥈' ? '🌟' : '💪';
+      els.doneTitle.textContent = state.levelPerfect ? '완벽해요!' : rank === '🥇' ? '최고예요!' : rank === '🥈' ? '잘했어요!' : '끝까지 했어요!';
+      els.doneRank.textContent = rank;
+      els.doneScore.innerHTML = `점수 ${percent}% · ${speedBadge}<br>+${coinsEarned} 코인 💰 ${state.levelPerfect ? '<br>PERFECT 보너스!' : ''}`;
+      els.nextLevelBtn.style.display = state.currentLevel < LEVELS.length ? 'block' : 'none';
+      els.finishMain.style.display = 'grid';
+      els.badgeSelectBox.style.display = 'none';
+      showScreen('finish');
+      confettiBurst(['🎉','💰','⭐','✨','🏆']);
+      popup(`+${coinsEarned} 💰`);
+      playTone('good');
+      speak('Great job');
+
+      if (state.unlocked > unlockedBefore) {
+        playUnlockTone();
+        confettiBurst(['🔓','⭐','✨']);
+        popup('새 레벨 열림! 🔓');
+      }
+
+      state.pendingReward = { percent, rank, coinsEarned, speedBadge };
+      setTimeout(showBadgeReward, 1200);
+    }
+
+    function showBadgeReward() {
+      els.finishMain.style.display = 'none';
+      els.badgeSelectBox.style.display = 'grid';
+      const choices = shuffle(BADGE_POOL).slice(0, 3);
+      els.badgeChoices.innerHTML = '';
+      choices.forEach(badge => {
+        const btn = document.createElement('button');
+        btn.className = 'badge-btn';
+        btn.textContent = badge;
+        btn.onclick = () => chooseBadge(badge);
+        els.badgeChoices.appendChild(btn);
+      });
+    }
+
+    function chooseBadge(badge) {
+      state.badges.push(badge);
+      saveProgress();
+      updateBadgeStrip();
+      confettiBurst(['🎁','✨',badge,'⭐']);
+      popup(`${badge} 배지 획득!`);
+      playTone('good');
+      els.badgeSelectBox.style.display = 'none';
+      els.finishMain.style.display = 'grid';
+      homeMascotSay('배지까지 받았네!');
+    }
+
+    els.retryBtn.onclick = () => startLevel(state.currentLevel);
+    els.nextLevelBtn.onclick = () => {
+      const next = Math.min(state.currentLevel + 1, LEVELS.length);
+      startLevel(next);
+    };
+    els.homeBtn.onclick = () => {
+      updateTopbar();
+      renderLevels();
+      updateBadgeStrip();
+      els.progressBar.style.width = '0%';
+      els.progressPercent.textContent = '0%';
+      els.progressText.textContent = `레벨 ${state.currentLevel} 준비!`;
+      homeMascotSay('코인도 모으고 배지도 모아 보자!');
+      showScreen('home');
+    };
+
+    loadProgress();
+    updateTopbar();
+    renderLevels();
+    updateBadgeStrip();
+    homeMascotSay('코인도 모으고 배지도 모아 보자!');
+  </script>
+</body>
+</html>
