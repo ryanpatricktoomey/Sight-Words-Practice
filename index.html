@@ -1398,6 +1398,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       stepIndex: 0,
       steps: [],
       score: 0,
+      correctCount: 0,
+      totalCount: 0,
       attempts: 0,
       currentWord: '',
       chunk: 1,
@@ -1878,6 +1880,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       state.steps = buildLevelSteps(state.words);
       state.stepIndex = 0;
       state.score = 0;
+      state.correctCount = 0;
+      state.totalCount = 0;
       state.attempts = 0;
       state.combo = 0;
       state.runBestCombo = 0;
@@ -1936,6 +1940,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
 
     function markCorrect(points = 1) {
       state.score += points;
+      state.correctCount += 1;
+      state.totalCount += 1;
       state.attempts += 1;
       state.combo += 1;
       state.runBestCombo = Math.max(state.runBestCombo, state.combo);
@@ -1948,6 +1954,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     }
 
     function markWrong() {
+      state.totalCount += 1;
       state.attempts += 1;
       state.combo = 0;
       state.chunkPerfect = false;
@@ -2298,7 +2305,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     function finishLevel() {
       state.endTime = Date.now();
       const seconds = Math.max(1, Math.round((state.endTime - state.startTime) / 1000));
-      const percent = state.attempts ? Math.round((state.score / (state.attempts * 2)) * 100) : 100;
+      const percent = state.totalCount > 0 ? Math.round((state.correctCount / state.totalCount) * 100) : 100;
       const rank = getRank(percent);
       const starsEarned = rank === '🥇' ? 3 : rank === '🥈' ? 2 : 1;
       const speedBadge = getSpeedBadge(seconds);
@@ -2308,10 +2315,10 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       const unlockedBefore = state.unlocked;
       const rankBefore = getRankByStars(state.stars);
 
-      if (firstClear) {
-        state.stars += starsEarned;
-        state.levelsDone += 1;
-      }
+      const prevBestStars = state.levelData[state.currentLevel]?.stars || 0;
+      const starDelta = Math.max(0, starsEarned - prevBestStars);
+      if (starDelta > 0) state.stars += starDelta;
+      if (firstClear) state.levelsDone += 1;
       state.coins += coinsEarned;
 
       const rankAfter = getRankByStars(state.stars);
