@@ -2541,11 +2541,12 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       box.innerHTML = `
         <div class="fill-sentence">${displayed}</div>
         <div class="fill-choices" id="fillChoices"></div>
-        <button class="main-btn btn-blue" id="fillReplay" style="margin-top:4px;">🔊 단어 듣기</button>
+        <button class="main-btn btn-blue" id="fillReplay" style="margin-top:4px;">🔊 문장 다시 듣기</button>
       `;
       els.stageBox.appendChild(box);
       mascotMood('neutral');
-      setTimeout(() => speak(word), 250);
+      const spokenSentence = sentence.replace('___', word);
+      setTimeout(() => speak(spokenSentence), 250);
 
       const pool = choicePool(word);
       const choicesEl = document.getElementById('fillChoices');
@@ -2557,7 +2558,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         choicesEl.appendChild(btn);
       });
 
-      document.getElementById('fillReplay').onclick = () => speak(word);
+      document.getElementById('fillReplay').onclick = () => speak(spokenSentence);
     }
 
     function checkFillChoice(button, picked, answer, part) {
