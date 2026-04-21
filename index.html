@@ -704,6 +704,108 @@
       padding-left: 2px;
     }
 
+    /* ── World Map ── */
+    .world-map { padding: 6px 0 10px; }
+
+    .map-row {
+      display: flex;
+      align-items: center;
+    }
+
+    .map-node {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #dce6f7;
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      cursor: pointer;
+      font-family: inherit;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: 0 6px 18px rgba(103,124,171,.14);
+      transition: transform .1s;
+    }
+    .map-node:active { transform: scale(.93); }
+    .map-node.map-done { border-color: #39cdaa; background: linear-gradient(180deg, #eafff8 0%, #d0ffee 100%); }
+    .map-node.map-next { border-color: #6e93ff; background: linear-gradient(180deg, #eaf1ff 0%, #d5e5ff 100%); animation: map-pulse 1.8s ease infinite; }
+    .map-node.map-locked { opacity: .45; cursor: not-allowed; filter: grayscale(.4); }
+    .map-node-emoji { font-size: 26px; line-height: 1; }
+    .map-node-num { font-size: 10px; font-weight: 900; color: var(--muted); margin-top: 2px; }
+    .map-node-rank { position: absolute; top: -6px; right: -4px; font-size: 18px; }
+
+    .map-h-line {
+      flex: 1;
+      height: 8px;
+      background: repeating-linear-gradient(90deg, #c8d8f4 0, #c8d8f4 7px, transparent 7px, transparent 14px);
+      border-radius: 4px;
+      margin: 0 3px;
+    }
+
+    .map-v-conn {
+      height: 28px;
+      position: relative;
+    }
+    .map-v-conn::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 8px;
+      border-radius: 4px;
+      background: repeating-linear-gradient(180deg, #c8d8f4 0, #c8d8f4 7px, transparent 7px, transparent 14px);
+    }
+    .map-v-conn.vc-right::after { right: 34px; }
+    .map-v-conn.vc-left::after { left: 34px; }
+
+    @keyframes map-pulse {
+      0%, 100% { box-shadow: 0 6px 18px rgba(110,147,255,.2), 0 0 0 0 rgba(110,147,255,.5); }
+      60% { box-shadow: 0 6px 18px rgba(110,147,255,.3), 0 0 0 10px rgba(110,147,255,0); }
+    }
+
+    /* ── Speak Test ── */
+    .speak-box { display: grid; gap: 12px; }
+
+    .mic-btn {
+      width: 100%;
+      min-height: 84px;
+      border-radius: 28px;
+      border: none;
+      background: linear-gradient(135deg, #a583ff 0%, #ff7ab8 100%);
+      color: white;
+      font-size: 26px;
+      font-weight: 900;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(165,131,255,.35);
+      transition: transform .08s ease;
+    }
+    .mic-btn:active { transform: scale(.97); }
+    .mic-btn:disabled { opacity: .65; cursor: not-allowed; }
+    .mic-btn.listening {
+      background: linear-gradient(135deg, #ff4444 0%, #ff9d5c 100%);
+      animation: mic-pulse 1s ease infinite;
+    }
+
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 8px 22px rgba(255,68,68,.25), 0 0 0 0 rgba(255,68,68,.45); }
+      50% { box-shadow: 0 8px 22px rgba(255,68,68,.35), 0 0 0 12px rgba(255,68,68,0); }
+    }
+
+    .speak-result {
+      font-size: 18px;
+      font-weight: 900;
+      min-height: 28px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .speak-result.correct { color: #1a7d5a; background: #d0ffee; }
+    .speak-result.wrong { color: #b53232; background: #ffe6e6; }
+
     @media (max-width: 760px) {
       .topbar { grid-template-columns: repeat(3, minmax(88px, 1fr)); max-width: 100%; }
       #screen-play .combo-float { right: 0; top: 102px; min-width: 68px; min-height: 68px; }
@@ -764,7 +866,7 @@
         </div>
         <div class="prompt">어떤 레벨부터 할까요?</div>
         <div class="status">한 레벨 안에서 3파트로 나누어 단어를 모두 연습해요 🙂</div>
-        <div class="level-grid" id="levelGrid"></div>
+        <div class="world-map" id="levelGrid"></div>
         <div class="tiny-note">매번 단어 순서가 바뀌어서 같은 레벨도 새롭게 연습할 수 있어요.</div>
       </div>
 
@@ -989,6 +1091,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     const LEVELS = buildLevels(ALL_WORDS, LEVEL_COUNT);
 
     const BADGE_POOL = ['🐶','🐱','🐰','🦊','🐼','🦄','🚀','🍕','⭐','🌈','⚽','🎮','🍎','🍩','🎈','🧁','🐯','🐻','🐸','🦖','💎','🛸','🍀','👑'];
+
+    const SPEECH_SUPPORTED = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
     const state = {
       currentLevel: 1,
@@ -1384,24 +1488,50 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       });
     }
 
-    function renderLevels() {
-      els.levelGrid.innerHTML = '';
-      LEVELS.forEach(level => {
-        const done = !!state.levelData[level.id]?.done;
-        const locked = level.id > state.unlocked;
-        const btn = document.createElement('button');
-        btn.className = 'level-btn' + (locked ? ' locked' : '');
-        const rank = state.levelData[level.id]?.rank || '';
-        btn.innerHTML = `
-          <div class="lock-mark">${locked ? '🔒' : done ? '🔓' : ''}</div>
-          <div class="level-emoji">${done ? (rank || '✅') : level.emoji}</div>
-          <div class="level-title">${level.title}</div>
-          <div class="level-sub">${level.words.length}개 단어</div>
-        `;
-        btn.disabled = locked;
-        btn.onclick = () => !locked && startLevel(level.id);
-        els.levelGrid.appendChild(btn);
-      });
+    function renderWorldMap() {
+      const container = els.levelGrid;
+      container.innerHTML = '';
+
+      for (let i = 0; i < LEVELS.length; i += 2) {
+        const goRight = (i / 2) % 2 === 0;
+        const pair = LEVELS.slice(i, i + 2);
+        const rowLevels = goRight ? pair : [...pair].reverse();
+
+        const row = document.createElement('div');
+        row.className = 'map-row';
+
+        rowLevels.forEach((level, j) => {
+          if (j > 0) {
+            const hline = document.createElement('div');
+            hline.className = 'map-h-line';
+            row.appendChild(hline);
+          }
+
+          const done = !!state.levelData[level.id]?.done;
+          const locked = level.id > state.unlocked;
+          const isNext = level.id === state.unlocked && !done;
+          const rank = state.levelData[level.id]?.rank || '';
+
+          const node = document.createElement('button');
+          node.className = 'map-node' + (done ? ' map-done' : isNext ? ' map-next' : locked ? ' map-locked' : '');
+          node.disabled = locked;
+          node.innerHTML = `
+            ${rank ? `<div class="map-node-rank">${rank}</div>` : ''}
+            <div class="map-node-emoji">${done ? '✅' : locked ? '🔒' : level.emoji}</div>
+            <div class="map-node-num">Lv ${level.id}</div>
+          `;
+          node.onclick = () => !locked && startLevel(level.id);
+          row.appendChild(node);
+        });
+
+        container.appendChild(row);
+
+        if (i + 2 < LEVELS.length) {
+          const vc = document.createElement('div');
+          vc.className = 'map-v-conn ' + (goRight ? 'vc-right' : 'vc-left');
+          container.appendChild(vc);
+        }
+      }
     }
 
     function setStage(tag, prompt, status) {
@@ -1418,6 +1548,9 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         steps.push({ type: 'partIntro', part, words: chunk });
         chunk.forEach(word => steps.push({ type: 'flashAuto', part, word }));
         shuffle(chunk).forEach(word => steps.push({ type: 'hearPick', part, word }));
+        if (SPEECH_SUPPORTED) {
+          shuffle(chunk).forEach(word => steps.push({ type: 'speakTest', part, word }));
+        }
         shuffle(chunk).forEach(word => steps.push({ type: 'spellTest', part, word }));
         steps.push({ type: 'partFinish', part, words: chunk });
       });
@@ -1463,6 +1596,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       if (step.type === 'partIntro') renderPartIntro(step.part, step.words);
       if (step.type === 'flashAuto') renderFlashAuto(step.word);
       if (step.type === 'hearPick') renderHearPick(step.word);
+      if (step.type === 'speakTest') renderSpeakTest(step.word);
       if (step.type === 'spellTest') renderSpellTest(step.word);
       if (step.type === 'partFinish') renderPartFinish(step.part);
     }
@@ -1674,6 +1808,101 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       });
     }
 
+    function renderSpeakTest(word) {
+      state.currentWord = word;
+      state.speakTries = 0;
+      setStage('🎤 말하기', '단어를 크게 말해 보세요!', '마이크 버튼을 누르고 말해 보세요.');
+      const box = document.createElement('div');
+      box.className = 'speak-box';
+      box.innerHTML = `
+        <div class="main-word bounce">${word}</div>
+        <div class="speak-result" id="speakResult"></div>
+        <button class="mic-btn" id="micBtn">🎤 Say It!</button>
+        <div class="two-btns">
+          <button class="main-btn btn-blue" id="speakReplay">🔊 Listen</button>
+          <button class="main-btn btn-yellow" id="speakSkip">⏭️ Skip</button>
+        </div>
+      `;
+      els.stageBox.appendChild(box);
+      mascotMood('neutral');
+      setTimeout(() => speak(word), 300);
+
+      document.getElementById('speakReplay').onclick = () => speak(word);
+      document.getElementById('speakSkip').onclick = () => { markWrong(); nextStep(100); };
+      document.getElementById('micBtn').onclick = () => startListening(word);
+    }
+
+    function startListening(word) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      const micBtn = document.getElementById('micBtn');
+      const resultEl = document.getElementById('speakResult');
+      if (!micBtn || !resultEl) return;
+
+      const recognition = new SR();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 5;
+
+      micBtn.textContent = '🔴 Listening...';
+      micBtn.classList.add('listening');
+      micBtn.disabled = true;
+      resultEl.textContent = '...';
+      resultEl.className = 'speak-result';
+
+      recognition.onresult = (event) => {
+        const alts = Array.from(event.results[0]).map(r => r.transcript.trim().toLowerCase());
+        const target = word.toLowerCase();
+        const matched = alts.some(a => a === target || a.split(/\s+/).includes(target));
+
+        resultEl.textContent = `"${alts[0]}"`;
+        micBtn.classList.remove('listening');
+
+        if (matched) {
+          resultEl.className = 'speak-result correct';
+          els.statusBox.textContent = 'Perfect! 🎤✨';
+          markCorrect(1);
+          confettiBurst(['🎤','⭐','✨','🎉']);
+          micBtn.textContent = '✅ 정답!';
+          nextStep(1100);
+        } else {
+          state.speakTries += 1;
+          resultEl.className = 'speak-result wrong';
+          if (state.speakTries >= 2) {
+            els.statusBox.textContent = `The word is "${word}". Let's listen again!`;
+            speak(word);
+            markWrong();
+            addWrongWordAgain(word, state.chunk);
+            micBtn.textContent = '🎤 Say It!';
+            micBtn.disabled = false;
+            nextStep(1500);
+          } else {
+            els.statusBox.textContent = 'Try again! 💪';
+            micBtn.textContent = '🎤 Try Again!';
+            micBtn.disabled = false;
+          }
+        }
+      };
+
+      recognition.onerror = () => {
+        resultEl.textContent = "Couldn't hear you 😅";
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤 Try Again!';
+        micBtn.disabled = false;
+        els.statusBox.textContent = 'Check your mic and try again!';
+      };
+
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+        if (micBtn.disabled && micBtn.textContent === '🔴 Listening...') {
+          micBtn.textContent = '🎤 Say It!';
+          micBtn.disabled = false;
+        }
+      };
+
+      recognition.start();
+    }
+
     function renderPartFinish(part) {
       const perfect = state.chunkPerfect;
       setStage(`🎉 파트 ${part} 완료`, perfect ? `파트 ${part} PERFECT!` : `파트 ${part} 끝!`, perfect ? '완벽해요! 보너스도 있어요!' : '잘했어요! 잠깐 축하하고 다음으로 가요.');
@@ -1773,7 +2002,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       if (state.currentLevel === state.unlocked && state.unlocked < LEVELS.length) state.unlocked += 1;
       saveProgress();
       updateTopbar();
-      renderLevels();
+      renderWorldMap();
       updateBadgeStrip();
 
       els.doneEmoji.textContent = rank === '🥇' ? '🏆' : rank === '🥈' ? '🌟' : '💪';
@@ -1933,7 +2162,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     };
     els.homeBtn.onclick = () => {
       updateTopbar();
-      renderLevels();
+      renderWorldMap();
       updateBadgeStrip();
       updateRankDisplay();
       els.progressBar.style.width = '0%';
@@ -1951,7 +2180,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
 
     document.getElementById('shopHomeBtn').onclick = () => {
       updateTopbar();
-      renderLevels();
+      renderWorldMap();
       updateBadgeStrip();
       updateRankDisplay();
       homeMascotSay('코인도 모으고 배지도 모아 보자!');
@@ -1964,7 +2193,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     updateTopbar();
     updateMascots();
     updateRankDisplay();
-    renderLevels();
+    renderWorldMap();
     updateBadgeStrip();
     homeMascotSay('코인도 모으고 배지도 모아 보자!');
   </script>
