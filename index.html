@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>돌치 단어 트레이너</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg1: #fef6ff;
@@ -27,7 +28,7 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0;
-      font-family: \"Comic Sans MS\", \"Trebuchet MS\", \"Arial Rounded MT Bold\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif;
+      font-family: 'Nunito', 'Jua', "Comic Sans MS", "Arial Rounded MT Bold", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
       color: var(--text);
       background:
         radial-gradient(circle at top left, #fff4b8 0%, transparent 26%),
@@ -584,6 +585,125 @@
       text-align: center;
     }
 
+    /* ── Rank Display ── */
+    .rank-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin: 8px auto 4px;
+      padding: 7px 14px;
+      background: linear-gradient(135deg, #fff9e0 0%, #fff1b8 100%);
+      border: 2px solid #ffe066;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #7a5800;
+    }
+
+    .rank-progress-text {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .rank-bar-wrap {
+      width: 80%;
+      max-width: 220px;
+      height: 9px;
+      background: #e8eef8;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 0 auto 8px;
+    }
+
+    .rank-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ffcd54 0%, #ff9d5c 100%);
+      border-radius: 999px;
+      transition: width .5s ease;
+    }
+
+    /* ── Shop Tabs ── */
+    .shop-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .shop-tab {
+      border: none;
+      border-radius: 18px;
+      padding: 10px 8px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #eef3ff;
+      color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+
+    .shop-tab.active {
+      background: #6e93ff;
+      color: #fff;
+    }
+
+    .shop-panel { display: none; }
+    .shop-panel.active { display: block; }
+
+    /* ── Coin Shop ── */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .shop-item {
+      border-radius: 22px;
+      padding: 12px 6px;
+      text-align: center;
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 3px solid #edf2fb;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 16px rgba(103, 124, 171, .10);
+      transition: transform .08s ease;
+    }
+    .shop-item:active { transform: scale(.96); }
+    .shop-item.owned { border-color: #39cdaa; background: linear-gradient(180deg, #eafff8 0%, #d6ffef 100%); }
+    .shop-item.active-mascot { border-color: #6e93ff; background: linear-gradient(180deg, #eaf1ff 0%, #d5e5ff 100%); box-shadow: 0 0 0 3px rgba(110,147,255,.25); }
+    .shop-item.cant-afford { opacity: .65; cursor: not-allowed; }
+
+    .shop-emoji { font-size: 34px; line-height: 1; margin-bottom: 5px; }
+    .shop-name { font-size: 12px; font-weight: 900; color: var(--text); margin-bottom: 3px; }
+    .shop-price { font-size: 12px; font-weight: 800; color: var(--muted); }
+    .shop-status {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f0f4ff;
+      color: #4561aa;
+    }
+    .shop-item.active-mascot .shop-status { background: #dde8ff; color: #2c4faa; }
+    .shop-item.owned .shop-status { background: #d6ffef; color: #1a7d5a; }
+
+    .shop-section-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--muted);
+      margin: 14px 0 6px;
+      text-align: left;
+      padding-left: 2px;
+    }
+
     @media (max-width: 760px) {
       .topbar { grid-template-columns: repeat(3, minmax(88px, 1fr)); max-width: 100%; }
       #screen-play .combo-float { right: 0; top: 102px; min-width: 68px; min-height: 68px; }
@@ -592,6 +712,7 @@
       .wrap { width: min(100%, 560px); padding: 14px 16px 22px; }
       .card { padding: 12px; }
       .type-input { font-size: 28px; }
+      .shop-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -617,7 +738,6 @@
           <div class="label">⭐</div>
           <div class="value" id="statStars">0</div>
         </div>
-</div>
       </div>
 
       <div class="progress-wrap">
@@ -629,12 +749,16 @@
       </div>
 
       <div id="screen-home" class="screen active">
+        <button class="main-btn btn-yellow" id="shopBtn" style="margin-bottom:12px;">🛒 코인 샵 열기</button>
         <div class="home-summary">
           <div class="summary-card">
             <div class="mascot-wrap">
               <div class="mascot" id="homeMascot">🐶</div>
               <div class="mascot-speech" id="homeMascotSpeech">같이 단어 연습하자!</div>
             </div>
+            <div class="rank-display" id="rankDisplay">🌱 Beginner Reader</div>
+            <div class="rank-bar-wrap"><div class="rank-bar" id="rankBar" style="width:0%"></div></div>
+            <div class="rank-progress-text" id="rankProgressText">⭐ 0 / 5 to next rank</div>
             <div class="badge-strip" id="badgeStrip"></div>
           </div>
         </div>
@@ -681,6 +805,26 @@
           <div class="badge-grid" id="badgeChoices"></div>
         </div>
       </div>
+
+      <!-- Coin Shop Screen -->
+      <div id="screen-shop" class="screen">
+        <div class="prompt">🛒 코인 샵</div>
+        <div class="status" id="shopStatus">코인으로 친구와 꾸미기를 사요!</div>
+        <div class="shop-tabs">
+          <button class="shop-tab active" id="tabMascot" onclick="switchShopTab('mascot')">🐾 Friends</button>
+          <button class="shop-tab" id="tabConfetti" onclick="switchShopTab('confetti')">🎊 Confetti</button>
+        </div>
+        <div class="shop-panel active" id="panelMascot">
+          <div class="shop-section-title">🐾 마스코트 친구들</div>
+          <div class="shop-grid" id="shopGrid"></div>
+        </div>
+        <div class="shop-panel" id="panelConfetti">
+          <div class="shop-section-title">🎊 Confetti Themes</div>
+          <div class="shop-grid" id="confettiGrid"></div>
+        </div>
+        <button class="main-btn btn-pink" id="shopHomeBtn" style="margin-top:16px;">🏠 돌아가기</button>
+      </div>
+
     </section>
   </div>
 
@@ -727,7 +871,7 @@
     </button>
   </div>
 </div>
-  
+
   <script>
 
     function isKakao() {
@@ -744,12 +888,12 @@ function openInExternalBrowser() {
   window.location.href = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
 }
 
-// run on load
 if (isKakao()) {
   showKakaoBlock();
 }
 
 document.getElementById('openBrowserBtn')?.addEventListener('click', openInExternalBrowser);
+
     const DOLCH = {
       prePrimer: ["a","and","away","big","blue","can","come","down","find","for","funny","go","help","here","I","in","is","it","jump","little","look","make","me","my","not","one","play","red","run","said","see","the","three","to","two","up","we","where","yellow","you"],
       primer: ["all","am","are","at","ate","be","black","brown","but","came","did","do","eat","four","get","good","have","he","into","like","must","new","no","now","on","our","out","please","pretty","ran","ride","saw","say","she","so","soon","that","there","they","this","too","under","want","was","well","went","what","white","who","will","with","yes"],
@@ -768,6 +912,59 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       ...DOLCH.grade2,
       ...DOLCH.grade3,
       ...DOLCH.nouns
+    ];
+
+    // 20 rank titles — unlocked every 5 stars, stars are never spent
+    const RANKS = [
+      { stars: 0,  emoji: '🌱', title: 'Beginner Reader' },
+      { stars: 5,  emoji: '🔤', title: 'Letter Learner' },
+      { stars: 10, emoji: '👀', title: 'Word Finder' },
+      { stars: 15, emoji: '🗺️', title: 'Word Explorer' },
+      { stars: 20, emoji: '⚡', title: 'Quick Reader' },
+      { stars: 25, emoji: '🎯', title: 'Word Hunter' },
+      { stars: 30, emoji: '🛡️', title: 'Brave Reader' },
+      { stars: 35, emoji: '📚', title: 'Book Lover' },
+      { stars: 40, emoji: '🌟', title: 'Star Reader' },
+      { stars: 45, emoji: '🏅', title: 'Word Champ' },
+      { stars: 50, emoji: '💥', title: 'Super Speller' },
+      { stars: 55, emoji: '⚔️', title: 'Word Warrior' },
+      { stars: 60, emoji: '🎖️', title: 'Reading Ace' },
+      { stars: 65, emoji: '🔮', title: 'Word Wizard' },
+      { stars: 70, emoji: '👑', title: 'Sight Master' },
+      { stars: 75, emoji: '🦁', title: 'Word Hero' },
+      { stars: 80, emoji: '🌈', title: 'Grand Reader' },
+      { stars: 85, emoji: '🔥', title: 'Word Legend' },
+      { stars: 90, emoji: '💎', title: 'Sight King' },
+      { stars: 95, emoji: '🏆', title: 'Sight Word Master' },
+    ];
+
+    // Confetti themes — id used as key, price 0 = free default
+    const SHOP_CONFETTI = [
+      { id: 'default',   name: 'Classic',    price: 0,  preview: '🎉⭐✨', emojis: ['🎉','⭐','✨','💖','🌟','🎈'] },
+      { id: 'flowers',   name: 'Flowers',    price: 10, preview: '🌸🌺🌷', emojis: ['🌸','🌺','🌷','🌻','🌼','🌹'] },
+      { id: 'food',      name: 'Food',       price: 10, preview: '🍕🍩🌮', emojis: ['🍕','🍔','🌮','🍦','🍩','🧁'] },
+      { id: 'sports',    name: 'Sports',     price: 15, preview: '⚽🏀🎾', emojis: ['⚽','🏀','🎾','🏈','⚾','🏐'] },
+      { id: 'halloween', name: 'Halloween',  price: 15, preview: '🎃👻🦇', emojis: ['🎃','👻','🦇','🕷️','🍬','🌙'] },
+      { id: 'rainbow',   name: 'Rainbow',    price: 20, preview: '🌈💧☁️', emojis: ['🌈','💧','🌊','☁️','⭐','🌟'] },
+      { id: 'gems',      name: 'Gems',       price: 20, preview: '💎👑🏆', emojis: ['💎','💍','👑','🏆','🥇','✨'] },
+      { id: 'dinos',     name: 'Dinos',      price: 25, preview: '🦕🦖🐊', emojis: ['🦕','🦖','🐊','🦎','🐉','🌋'] },
+      { id: 'space',     name: 'Space',      price: 25, preview: '🚀🌍⭐', emojis: ['🚀','🌍','⭐','🛸','👾','🌙'] },
+    ];
+
+    // Shop mascot catalog — price 0 = free/default
+    const SHOP_MASCOTS = [
+      { emoji: '🐶', name: 'Dog',     price: 0  },
+      { emoji: '🐱', name: 'Cat',     price: 15 },
+      { emoji: '🐸', name: 'Frog',    price: 20 },
+      { emoji: '🦊', name: 'Fox',     price: 25 },
+      { emoji: '🐼', name: 'Panda',   price: 30 },
+      { emoji: '🐯', name: 'Tiger',   price: 40 },
+      { emoji: '🐻', name: 'Bear',    price: 45 },
+      { emoji: '🦄', name: 'Unicorn', price: 60 },
+      { emoji: '🐲', name: 'Dragon',  price: 80 },
+      { emoji: '🦋', name: 'Butterfly', price: 50 },
+      { emoji: '🐧', name: 'Penguin', price: 35 },
+      { emoji: '🦖', name: 'Dino',    price: 70 },
     ];
 
     function buildLevels(words, count) {
@@ -816,13 +1013,18 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       levelPerfect: true,
       startTime: 0,
       endTime: 0,
-      pendingReward: null
+      pendingReward: null,
+      ownedMascots: ['🐶'],
+      activeMascot: '🐶',
+      ownedConfetti: ['default'],
+      activeConfetti: 'default'
     };
 
     const els = {
       home: document.getElementById('screen-home'),
       play: document.getElementById('screen-play'),
       finish: document.getElementById('screen-finish'),
+      shop: document.getElementById('screen-shop'),
       levelGrid: document.getElementById('levelGrid'),
       stageTag: document.getElementById('stageTag'),
       chunkBadge: document.getElementById('chunkBadge'),
@@ -861,7 +1063,11 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         levelsDone: state.levelsDone,
         levelData: state.levelData,
         bestCombo: state.bestCombo || 0,
-        badges: state.badges || []
+        badges: state.badges || [],
+        ownedMascots: state.ownedMascots || ['🐶'],
+        activeMascot: state.activeMascot || '🐶',
+        ownedConfetti: state.ownedConfetti || ['default'],
+        activeConfetti: state.activeConfetti || 'default'
       }));
     }
 
@@ -877,6 +1083,10 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         state.levelData = data.levelData || {};
         state.bestCombo = data.bestCombo || 0;
         state.badges = data.badges || [];
+        state.ownedMascots = data.ownedMascots || ['🐶'];
+        state.activeMascot = data.activeMascot || '🐶';
+        state.ownedConfetti = data.ownedConfetti || ['default'];
+        state.activeConfetti = data.activeConfetti || 'default';
       } catch (e) {}
     }
 
@@ -901,9 +1111,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     }
 
     function showScreen(name) {
-      els.home.classList.remove('active');
-      els.play.classList.remove('active');
-      els.finish.classList.remove('active');
+      ['home','play','finish','shop'].forEach(s => els[s].classList.remove('active'));
       els[name].classList.add('active');
 
       const progress = document.querySelector('.progress-wrap');
@@ -1025,11 +1233,50 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       setTimeout(() => ctx.close(), 900);
     }
 
-    function confettiBurst(emojis = ['🎉','⭐','✨','💖','🌟','🎈']) {
+    function getActiveConfettiEmojis() {
+      const theme = SHOP_CONFETTI.find(t => t.id === state.activeConfetti);
+      return theme ? theme.emojis : ['🎉','⭐','✨','💖','🌟','🎈'];
+    }
+
+    function getRankByStars(stars) {
+      let rank = RANKS[0];
+      for (const r of RANKS) {
+        if (stars >= r.stars) rank = r;
+        else break;
+      }
+      return rank;
+    }
+
+    function getNextRank(stars) {
+      return RANKS.find(r => r.stars > stars) || null;
+    }
+
+    function updateRankDisplay() {
+      const rank = getRankByStars(state.stars);
+      const next = getNextRank(state.stars);
+      const displayEl = document.getElementById('rankDisplay');
+      const barEl = document.getElementById('rankBar');
+      const textEl = document.getElementById('rankProgressText');
+      if (!displayEl) return;
+      displayEl.textContent = `${rank.emoji} ${rank.title}`;
+      if (next) {
+        const starsIntoThisRank = state.stars - rank.stars;
+        const starsNeeded = next.stars - rank.stars;
+        const pct = Math.round((starsIntoThisRank / starsNeeded) * 100);
+        barEl.style.width = pct + '%';
+        textEl.textContent = `⭐ ${state.stars} / ${next.stars} to ${next.emoji} ${next.title}`;
+      } else {
+        barEl.style.width = '100%';
+        textEl.textContent = '🏆 MAX RANK!';
+      }
+    }
+
+    function confettiBurst(emojis) {
+      const src = emojis || getActiveConfettiEmojis();
       for (let i = 0; i < 18; i++) {
         const span = document.createElement('div');
         span.className = 'confetti';
-        span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        span.textContent = src[Math.floor(Math.random() * src.length)];
         span.style.left = Math.random() * 100 + 'vw';
         span.style.animationDelay = (Math.random() * 0.25) + 's';
         span.style.fontSize = (20 + Math.random() * 18) + 'px';
@@ -1046,27 +1293,32 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       setTimeout(() => el.remove(), 1000);
     }
 
+    function updateMascots() {
+      els.homeMascot.textContent = state.activeMascot;
+      els.playMascot.textContent = state.activeMascot;
+    }
+
     function mascotMood(type) {
       if (type === 'good') {
-        els.playMascot.textContent = '🐶';
+        els.playMascot.textContent = state.activeMascot;
         els.playMascotSpeech.textContent = '좋았어!';
         els.playMascot.classList.remove('shake');
         els.playMascot.classList.add('pulse');
         setTimeout(() => els.playMascot.classList.remove('pulse'), 450);
       } else if (type === 'oops') {
-        els.playMascot.textContent = '🐶';
+        els.playMascot.textContent = state.activeMascot;
         els.playMascotSpeech.textContent = '다시 해보자!';
         els.playMascot.classList.remove('pulse');
         els.playMascot.classList.add('shake');
         setTimeout(() => els.playMascot.classList.remove('shake'), 300);
       } else {
-        els.playMascot.textContent = '🐶';
+        els.playMascot.textContent = state.activeMascot;
         els.playMascotSpeech.textContent = '집중!';
       }
     }
 
     function homeMascotSay(text) {
-      els.homeMascot.textContent = '🐶';
+      els.homeMascot.textContent = state.activeMascot;
       els.homeMascotSpeech.textContent = text;
     }
 
@@ -1501,12 +1753,16 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       const coinResult = calculateCoinBreakdown(percent, state.runBestCombo, state.levelPerfect, firstClear);
       const coinsEarned = coinResult.total;
       const unlockedBefore = state.unlocked;
+      const rankBefore = getRankByStars(state.stars);
 
       if (firstClear) {
         state.stars += starsEarned;
         state.levelsDone += 1;
       }
       state.coins += coinsEarned;
+
+      const rankAfter = getRankByStars(state.stars);
+      const rankedUp = rankAfter.stars > rankBefore.stars;
 
       state.levelData[state.currentLevel] = {
         done: true,
@@ -1539,6 +1795,15 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         popup('새 레벨 열림! 🔓');
       }
 
+      if (rankedUp) {
+        setTimeout(() => {
+          playUnlockTone();
+          confettiBurst([rankAfter.emoji,'⭐','✨','🎉','🏅']);
+          popup(`${rankAfter.emoji} ${rankAfter.title}!`);
+        }, 600);
+      }
+
+      updateRankDisplay();
       state.pendingReward = { percent, rank, coinsEarned, speedBadge };
       setTimeout(showBadgeReward, 1200);
     }
@@ -1569,6 +1834,98 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       homeMascotSay('배지까지 받았네!');
     }
 
+    // ── Coin Shop ──────────────────────────────────────────
+
+    function makeShopItem({ emoji, label, price, isFree, isActive, isOwned, canAfford, onBuy, onSelect }) {
+      const btn = document.createElement('button');
+      let cls = 'shop-item';
+      if (isActive) cls += ' active-mascot';
+      else if (isOwned) cls += ' owned';
+      else if (!canAfford) cls += ' cant-afford';
+      btn.className = cls;
+
+      let statusLabel = isActive ? '✅ 사용 중' : isOwned ? '👆 선택하기' : canAfford ? `🛒 구매` : `🪙 ${price} 필요`;
+
+      btn.innerHTML = `
+        <div class="shop-emoji">${emoji}</div>
+        <div class="shop-name">${label}</div>
+        <div class="shop-price">${isFree ? 'Free!' : `🪙 ${price}`}</div>
+        <div class="shop-status">${statusLabel}</div>
+      `;
+
+      btn.onclick = () => {
+        if (isActive) return;
+        if (isOwned) { onSelect(); }
+        else if (canAfford) { onBuy(); }
+        else { popup('코인이 부족해요! 🪙'); playTone('bad'); }
+      };
+      return btn;
+    }
+
+    function renderShop() {
+      const shopStatus = document.getElementById('shopStatus');
+      shopStatus.textContent = `🪙 ${state.coins} coins`;
+
+      // Mascots
+      const grid = document.getElementById('shopGrid');
+      grid.innerHTML = '';
+      SHOP_MASCOTS.forEach(item => {
+        const isOwned = state.ownedMascots.includes(item.emoji);
+        const isActive = state.activeMascot === item.emoji;
+        grid.appendChild(makeShopItem({
+          emoji: item.emoji, label: item.name, price: item.price,
+          isFree: item.price === 0, isActive, isOwned,
+          canAfford: state.coins >= item.price,
+          onSelect: () => {
+            state.activeMascot = item.emoji;
+            saveProgress(); updateMascots(); renderShop();
+            popup(`${item.emoji} 선택됨!`); playTone('good');
+          },
+          onBuy: () => {
+            state.coins -= item.price;
+            state.ownedMascots.push(item.emoji);
+            state.activeMascot = item.emoji;
+            saveProgress(); updateTopbar(); updateMascots(); renderShop();
+            confettiBurst([item.emoji,'✨','🎉','⭐']); popup(`${item.emoji} 획득!`); playUnlockTone();
+          }
+        }));
+      });
+
+      // Confetti themes
+      const cgrid = document.getElementById('confettiGrid');
+      cgrid.innerHTML = '';
+      SHOP_CONFETTI.forEach(item => {
+        const isOwned = state.ownedConfetti.includes(item.id);
+        const isActive = state.activeConfetti === item.id;
+        cgrid.appendChild(makeShopItem({
+          emoji: item.preview, label: item.name, price: item.price,
+          isFree: item.price === 0, isActive, isOwned,
+          canAfford: state.coins >= item.price,
+          onSelect: () => {
+            state.activeConfetti = item.id;
+            saveProgress(); renderShop();
+            confettiBurst(item.emojis); popup(`${item.name} 선택됨!`); playTone('good');
+          },
+          onBuy: () => {
+            state.coins -= item.price;
+            state.ownedConfetti.push(item.id);
+            state.activeConfetti = item.id;
+            saveProgress(); updateTopbar(); renderShop();
+            confettiBurst(item.emojis); popup(`${item.name} 획득!`); playUnlockTone();
+          }
+        }));
+      });
+    }
+
+    function switchShopTab(tab) {
+      document.getElementById('tabMascot').classList.toggle('active', tab === 'mascot');
+      document.getElementById('tabConfetti').classList.toggle('active', tab === 'confetti');
+      document.getElementById('panelMascot').classList.toggle('active', tab === 'mascot');
+      document.getElementById('panelConfetti').classList.toggle('active', tab === 'confetti');
+    }
+
+    // ── Button wiring ──────────────────────────────────────
+
     els.retryBtn.onclick = () => startLevel(state.currentLevel);
     els.nextLevelBtn.onclick = () => {
       const next = Math.min(state.currentLevel + 1, LEVELS.length);
@@ -1578,6 +1935,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       updateTopbar();
       renderLevels();
       updateBadgeStrip();
+      updateRankDisplay();
       els.progressBar.style.width = '0%';
       els.progressPercent.textContent = '0%';
       els.progressText.textContent = `레벨 ${state.currentLevel} 준비!`;
@@ -1585,8 +1943,27 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       showScreen('home');
     };
 
+    document.getElementById('shopBtn').onclick = () => {
+      renderShop();
+      switchShopTab('mascot');
+      showScreen('shop');
+    };
+
+    document.getElementById('shopHomeBtn').onclick = () => {
+      updateTopbar();
+      renderLevels();
+      updateBadgeStrip();
+      updateRankDisplay();
+      homeMascotSay('코인도 모으고 배지도 모아 보자!');
+      showScreen('home');
+    };
+
+    // ── Init ───────────────────────────────────────────────
+
     loadProgress();
     updateTopbar();
+    updateMascots();
+    updateRankDisplay();
     renderLevels();
     updateBadgeStrip();
     homeMascotSay('코인도 모으고 배지도 모아 보자!');
