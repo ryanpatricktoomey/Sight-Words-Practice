@@ -806,6 +806,87 @@
     .speak-result.correct { color: #1a7d5a; background: #d0ffee; }
     .speak-result.wrong { color: #b53232; background: #ffe6e6; }
 
+    /* ── Speed Round ── */
+    .speed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .speed-timer {
+      font-size: clamp(56px, 15vw, 88px);
+      font-weight: 900;
+      line-height: 1;
+      color: #3b5492;
+      min-width: 90px;
+      text-align: center;
+      transition: color .3s;
+    }
+    .speed-timer.urgent { color: #ff4444; }
+    .speed-timer.urgent-pulse { animation: urgentPop .4s ease; }
+
+    @keyframes urgentPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.14); }
+      100% { transform: scale(1); }
+    }
+
+    .speed-score-wrap {
+      flex: 1;
+      text-align: center;
+      background: linear-gradient(180deg, #fff 0%, #f7fbff 100%);
+      border: 2px solid #eef3fb;
+      border-radius: 22px;
+      padding: 10px 14px;
+    }
+    .speed-score-label { font-size: 12px; color: var(--muted); font-weight: 800; }
+    .speed-score { font-size: clamp(28px, 8vw, 44px); font-weight: 900; line-height: 1.1; }
+    .speed-best-label { font-size: 11px; color: var(--muted); font-weight: 800; margin-top: 2px; }
+
+    .speed-word {
+      text-align: center;
+      font-size: clamp(42px, 12vw, 72px);
+      font-weight: 900;
+      color: #3b5492;
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #fff 0%, #f7fbff 100%);
+      border: 3px solid #edf2fb;
+      border-radius: 26px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .speed-word.reveal { animation: bounce .3s ease; }
+
+    .speed-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .speed-choice {
+      min-height: 78px;
+      border-radius: 22px;
+      border: none;
+      font-size: clamp(20px, 6vw, 32px);
+      font-weight: 900;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform .06s ease;
+      box-shadow: 0 4px 12px rgba(103,124,171,.12);
+    }
+    .speed-choice:active { transform: scale(.95); }
+    .speed-choice:nth-child(1) { background: #ffe6f0; }
+    .speed-choice:nth-child(2) { background: #e8f1ff; }
+    .speed-choice:nth-child(3) { background: #e5fff3; }
+    .speed-choice:nth-child(4) { background: #fff3d4; }
+    .speed-choice.sc-correct { background: #dffff2 !important; box-shadow: 0 0 0 4px rgba(57,205,170,.3); }
+    .speed-choice.sc-wrong   { background: #ffe6e6 !important; box-shadow: 0 0 0 4px rgba(255,113,113,.2); }
+
     @media (max-width: 760px) {
       .topbar { grid-template-columns: repeat(3, minmax(88px, 1fr)); max-width: 100%; }
       #screen-play .combo-float { right: 0; top: 102px; min-width: 68px; min-height: 68px; }
@@ -897,6 +978,7 @@
             <button class="main-btn btn-mint" id="retryBtn">🔁 한 번 더 도전!</button>
             <button class="main-btn btn-blue" id="nextLevelBtn">➡️ 다음 레벨</button>
           </div>
+          <button class="main-btn btn-orange" id="speedRoundBtn">⚡ Speed Round!</button>
           <button class="main-btn btn-pink" id="homeBtn">🏠 레벨 고르기</button>
         </div>
 
@@ -905,6 +987,31 @@
           <div class="done-title">배지를 골라요!</div>
           <div class="done-score">하나를 고르면 내 배지에 저장돼요.</div>
           <div class="badge-grid" id="badgeChoices"></div>
+        </div>
+      </div>
+
+      <!-- Speed Round Screen -->
+      <div id="screen-speed" class="screen">
+        <div id="speedPlay">
+          <div class="speed-header">
+            <div class="speed-timer" id="speedTimer">30</div>
+            <div class="speed-score-wrap">
+              <div class="speed-score-label">Score</div>
+              <div class="speed-score" id="speedScore">0</div>
+              <div class="speed-best-label" id="speedBestLabel">Best: 0</div>
+            </div>
+          </div>
+          <div class="speed-word" id="speedWord">?</div>
+          <div class="speed-choices" id="speedChoices"></div>
+        </div>
+        <div class="done-box" id="speedResult" style="display:none;">
+          <div class="done-emoji" id="speedResultEmoji">⚡</div>
+          <div class="done-title" id="speedResultTitle">Time's Up!</div>
+          <div class="done-score" id="speedResultScore"></div>
+          <div class="two-btns">
+            <button class="main-btn btn-orange" id="speedRetryBtn">⚡ Try Again</button>
+            <button class="main-btn btn-pink" id="speedBackBtn">🏠 레벨 고르기</button>
+          </div>
         </div>
       </div>
 
@@ -1121,7 +1228,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       ownedMascots: ['🐶'],
       activeMascot: '🐶',
       ownedConfetti: ['default'],
-      activeConfetti: 'default'
+      activeConfetti: 'default',
+      speedBest: {}
     };
 
     const els = {
@@ -1129,6 +1237,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       play: document.getElementById('screen-play'),
       finish: document.getElementById('screen-finish'),
       shop: document.getElementById('screen-shop'),
+      speed: document.getElementById('screen-speed'),
       levelGrid: document.getElementById('levelGrid'),
       stageTag: document.getElementById('stageTag'),
       chunkBadge: document.getElementById('chunkBadge'),
@@ -1171,7 +1280,8 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         ownedMascots: state.ownedMascots || ['🐶'],
         activeMascot: state.activeMascot || '🐶',
         ownedConfetti: state.ownedConfetti || ['default'],
-        activeConfetti: state.activeConfetti || 'default'
+        activeConfetti: state.activeConfetti || 'default',
+        speedBest: state.speedBest || {}
       }));
     }
 
@@ -1191,6 +1301,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         state.activeMascot = data.activeMascot || '🐶';
         state.ownedConfetti = data.ownedConfetti || ['default'];
         state.activeConfetti = data.activeConfetti || 'default';
+        state.speedBest = data.speedBest || {};
       } catch (e) {}
     }
 
@@ -1215,7 +1326,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
     }
 
     function showScreen(name) {
-      ['home','play','finish','shop'].forEach(s => els[s].classList.remove('active'));
+      ['home','play','finish','shop','speed'].forEach(s => els[s].classList.remove('active'));
       els[name].classList.add('active');
 
       const progress = document.querySelector('.progress-wrap');
@@ -2153,6 +2264,150 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       document.getElementById('panelConfetti').classList.toggle('active', tab === 'confetti');
     }
 
+    // ── Speed Round ────────────────────────────────────────
+
+    const speedRound = {
+      active: false, score: 0, timeLeft: 30,
+      timer: null, words: [], wordIndex: 0, levelId: null
+    };
+
+    function playTick() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 900;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.07, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.1);
+      setTimeout(() => ctx.close(), 300);
+    }
+
+    function startSpeedRound(levelId) {
+      const level = LEVELS.find(l => l.id === levelId);
+      speedRound.active = true;
+      speedRound.score = 0;
+      speedRound.timeLeft = 30;
+      speedRound.levelId = levelId;
+      speedRound.words = shuffle([...level.words]);
+      speedRound.wordIndex = 0;
+
+      const best = state.speedBest[levelId] || 0;
+      document.getElementById('speedPlay').style.display = 'block';
+      document.getElementById('speedResult').style.display = 'none';
+      document.getElementById('speedScore').textContent = '0';
+      document.getElementById('speedBestLabel').textContent = `Best: ${best}`;
+      const timerEl = document.getElementById('speedTimer');
+      timerEl.textContent = '30';
+      timerEl.classList.remove('urgent', 'urgent-pulse');
+
+      showScreen('speed');
+      setTimeout(() => {
+        nextSpeedWord();
+        speedRound.timer = setInterval(tickSpeedTimer, 1000);
+      }, 200);
+    }
+
+    function tickSpeedTimer() {
+      speedRound.timeLeft -= 1;
+      const timerEl = document.getElementById('speedTimer');
+      if (!timerEl) return;
+      timerEl.textContent = speedRound.timeLeft;
+      if (speedRound.timeLeft <= 10) {
+        timerEl.classList.add('urgent');
+        timerEl.classList.remove('urgent-pulse');
+        void timerEl.offsetWidth; // force reflow to restart animation
+        timerEl.classList.add('urgent-pulse');
+        if (speedRound.timeLeft <= 5) playTick();
+      }
+      if (speedRound.timeLeft <= 0) endSpeedRound();
+    }
+
+    function nextSpeedWord() {
+      if (!speedRound.active) return;
+      if (speedRound.wordIndex >= speedRound.words.length) {
+        speedRound.words = shuffle(speedRound.words);
+        speedRound.wordIndex = 0;
+      }
+      const word = speedRound.words[speedRound.wordIndex++];
+      const wordEl = document.getElementById('speedWord');
+      const choicesEl = document.getElementById('speedChoices');
+      if (!wordEl || !choicesEl) return;
+
+      wordEl.textContent = '?';
+      wordEl.classList.remove('reveal');
+      speak(word);
+
+      const level = LEVELS.find(l => l.id === speedRound.levelId);
+      const others = shuffle(level.words.filter(w => w !== word)).slice(0, 3);
+      const choices = shuffle([word, ...others]);
+
+      choicesEl.innerHTML = '';
+      choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'speed-choice';
+        btn.textContent = choice;
+        btn.onclick = () => handleSpeedChoice(btn, choice, word, choicesEl);
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function handleSpeedChoice(btn, picked, answer, choicesEl) {
+      if (!speedRound.active) return;
+      const btns = [...choicesEl.querySelectorAll('.speed-choice')];
+      btns.forEach(b => b.disabled = true);
+      const wordEl = document.getElementById('speedWord');
+
+      if (picked === answer) {
+        btn.classList.add('sc-correct');
+        speedRound.score += 1;
+        document.getElementById('speedScore').textContent = speedRound.score;
+        if (wordEl) { wordEl.textContent = answer; wordEl.classList.add('reveal'); }
+        playTone('good');
+        setTimeout(nextSpeedWord, 380);
+      } else {
+        btn.classList.add('sc-wrong');
+        btns.find(b => b.textContent === answer)?.classList.add('sc-correct');
+        if (wordEl) { wordEl.textContent = answer; wordEl.classList.add('reveal'); }
+        playTone('bad');
+        setTimeout(nextSpeedWord, 700);
+      }
+    }
+
+    function endSpeedRound() {
+      speedRound.active = false;
+      clearInterval(speedRound.timer);
+      const score = speedRound.score;
+      const levelId = speedRound.levelId;
+      const prevBest = state.speedBest[levelId] || 0;
+      const isNewBest = score > prevBest;
+
+      if (isNewBest) {
+        state.speedBest[levelId] = score;
+        const bonusCoins = Math.max(1, Math.floor(score / 3));
+        state.coins += bonusCoins;
+        saveProgress();
+        updateTopbar();
+      }
+
+      document.getElementById('speedPlay').style.display = 'none';
+      document.getElementById('speedResult').style.display = 'grid';
+
+      const emoji = score >= 20 ? '🏆' : score >= 12 ? '⚡' : score >= 6 ? '🌟' : '💪';
+      document.getElementById('speedResultEmoji').textContent = emoji;
+      document.getElementById('speedResultTitle').textContent = isNewBest ? '🏆 New Record!' : "Time's Up!";
+      const bonusLine = isNewBest ? `<br><span style="color:#39cdaa;font-size:17px;">New best! +${Math.max(1,Math.floor(score/3))} 🪙</span>` : `<br><span style="color:var(--muted);font-size:16px;">Best: ${prevBest}</span>`;
+      document.getElementById('speedResultScore').innerHTML = `You got <strong>${score}</strong> word${score !== 1 ? 's' : ''}!${bonusLine}`;
+
+      confettiBurst(score >= 12 ? ['⚡','🏆','⭐','✨'] : ['⭐','✨','🎉']);
+      playTone('good');
+    }
+
     // ── Button wiring ──────────────────────────────────────
 
     els.retryBtn.onclick = () => startLevel(state.currentLevel);
@@ -2168,6 +2423,19 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
       els.progressBar.style.width = '0%';
       els.progressPercent.textContent = '0%';
       els.progressText.textContent = `레벨 ${state.currentLevel} 준비!`;
+      homeMascotSay('코인도 모으고 배지도 모아 보자!');
+      showScreen('home');
+    };
+
+    document.getElementById('speedRoundBtn').onclick = () => startSpeedRound(state.currentLevel);
+
+    document.getElementById('speedRetryBtn').onclick = () => startSpeedRound(speedRound.levelId);
+
+    document.getElementById('speedBackBtn').onclick = () => {
+      updateTopbar();
+      renderWorldMap();
+      updateBadgeStrip();
+      updateRankDisplay();
       homeMascotSay('코인도 모으고 배지도 모아 보자!');
       showScreen('home');
     };
