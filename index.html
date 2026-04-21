@@ -1829,7 +1829,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         button.classList.add('correct');
         els.statusBox.textContent = '정답! 잘했어요! 🎉';
         markCorrect(1);
-        confettiBurst(['⭐','✨','🎉']);
+        confettiBurst();
       } else {
         button.classList.add('wrong');
         const right = buttons.find(b => b.textContent === answer);
@@ -1888,7 +1888,7 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
         if (typed === answer) {
           els.statusBox.textContent = '맞았어요! 정말 잘했어요! 🌟';
           markCorrect(2);
-          confettiBurst(['⭐','💖','✨']);
+          confettiBurst();
           input.disabled = true;
           nextStep(850);
         } else {
@@ -1973,25 +1973,16 @@ document.getElementById('openBrowserBtn')?.addEventListener('click', openInExter
           resultEl.className = 'speak-result correct';
           els.statusBox.textContent = 'Perfect! 🎤✨';
           markCorrect(1);
-          confettiBurst(['🎤','⭐','✨','🎉']);
+          confettiBurst();
           micBtn.textContent = '✅ 정답!';
           nextStep(1100);
         } else {
           state.speakTries += 1;
           resultEl.className = 'speak-result wrong';
-          if (state.speakTries >= 2) {
-            els.statusBox.textContent = `The word is "${word}". Let's listen again!`;
-            speak(word);
-            markWrong();
-            addWrongWordAgain(word, state.chunk);
-            micBtn.textContent = '🎤 Say It!';
-            micBtn.disabled = false;
-            nextStep(1500);
-          } else {
-            els.statusBox.textContent = 'Try again! 💪';
-            micBtn.textContent = '🎤 Try Again!';
-            micBtn.disabled = false;
-          }
+          els.statusBox.textContent = 'Try again! 💪';
+          micBtn.classList.remove('listening');
+          micBtn.textContent = '🎤 Try Again!';
+          micBtn.disabled = false;
         }
       };
 
